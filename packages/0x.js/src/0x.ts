@@ -238,7 +238,7 @@ export class ZeroEx {
      */
     public async awaitTransactionMinedAsync(
         txHash: string,
-        pollingIntervalMs = 1000,
+        pollingIntervalMs: number = 1000,
         timeoutMs?: number,
     ): Promise<TransactionReceiptWithDecodedLogs> {
         const transactionReceiptWithDecodedLogs = await this._web3Wrapper.awaitTransactionMinedAsync(
@@ -254,7 +254,7 @@ export class ZeroEx {
      * @param   config      The configuration object. Look up the type for the description.
      * @return  An instance of the 0x.js OrderStateWatcher class.
      */
-    public createOrderStateWatcher(config?: OrderStateWatcherConfig) {
+    public createOrderStateWatcher(config?: OrderStateWatcherConfig): OrderStateWatcher {
         return new OrderStateWatcher(this._web3Wrapper, this.token, this.exchange, config);
     }
     /*
