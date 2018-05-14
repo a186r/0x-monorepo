@@ -20,6 +20,7 @@ pragma solidity ^0.4.10;
 
 import { MultiSigWallet } from "../MultiSigWallet/MultiSigWallet.sol";
 
+// 带时间锁的多签钱包，允许多方在时间锁定过后执行
 /// @title Multisignature wallet with time lock- Allows multiple parties to execute a transaction after a time lock has passed.
 /// @author Amir Bandeali - <amir@0xProject.com>
 contract MultiSigWalletWithTimeLock is MultiSigWallet {
@@ -50,6 +51,7 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
      * Public functions
      */
 
+// 构造函数设置所有人，确认次数和锁定时间
     /// @dev Contract constructor sets initial owners, required number of confirmations, and time lock.
     /// @param _owners List of initial owners.
     /// @param _required Number of required confirmations.
@@ -71,6 +73,7 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
         TimeLockChange(_secondsTimeLocked);
     }
 
+// 允许所有人确认一笔交易
     /// @dev Allows an owner to confirm a transaction.
     /// @param transactionId Transaction ID.
     function confirmTransaction(uint transactionId)
@@ -87,6 +90,7 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
         }
     }
 
+// 允许所有人撤销交易确认
     /// @dev Allows an owner to revoke a confirmation for a transaction.
     /// @param transactionId Transaction ID.
     function revokeConfirmation(uint transactionId)
@@ -100,6 +104,7 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
         Revocation(msg.sender, transactionId);
     }
 
+// 允许任何人执行一个已确认交易
     /// @dev Allows anyone to execute a confirmed transaction.
     /// @param transactionId Transaction ID.
     function executeTransaction(uint transactionId)
