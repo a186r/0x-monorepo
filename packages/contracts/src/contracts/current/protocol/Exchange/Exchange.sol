@@ -27,20 +27,23 @@ import { SafeMath_v1 as SafeMath } from "../../../previous/SafeMath/SafeMath_v1.
 contract Exchange is SafeMath {
 
     // Error Codes
+
+    // 使用枚举做ErrorCode
     enum Errors {
         ORDER_EXPIRED,                    // Order has already expired
         ORDER_FULLY_FILLED_OR_CANCELLED,  // Order has already been fully filled or cancelled
         ROUNDING_ERROR_TOO_LARGE,         // Rounding error too large
         INSUFFICIENT_BALANCE_OR_ALLOWANCE // Insufficient balance or allowance for token transfer
     }
-
     string constant public VERSION = "1.0.0";
+    // 要求至少5000 gas
     uint16 constant public EXTERNAL_QUERY_GAS_LIMIT = 4999;    // Changes to state require at least 5000 gas
 
     address public ZRX_TOKEN_CONTRACT;
-    address public TOKEN_TRANSFER_PROXY_CONTRACT;
+    address public TOKEN_TRANSFER_PROXY_CONTRACT;//TODO:交易代理?
 
     // Mappings of orderHash => amounts of takerTokenAmount filled or cancelled.
+    // 订单hash对应Token数量
     mapping (bytes32 => uint) public filled;
     mapping (bytes32 => uint) public cancelled;
 
@@ -94,6 +97,7 @@ contract Exchange is SafeMath {
     * Core exchange functions
     */
 
+// 填写输入订单
     /// @dev Fills the input order.
     /// @param orderAddresses Array of order's maker, taker, makerToken, takerToken, and feeRecipient.
     /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
@@ -130,6 +134,8 @@ contract Exchange is SafeMath {
 
         require(order.taker == address(0) || order.taker == msg.sender);
         require(order.makerTokenAmount > 0 && order.takerTokenAmount > 0 && fillTakerTokenAmount > 0);
+
+        // 验证订单签名是有效的
         require(isValidSignature(
             order.maker,
             order.orderHash,
@@ -138,6 +144,7 @@ contract Exchange is SafeMath {
             s
         ));
 
+// 判断订单是否过期
         if (block.timestamp >= order.expirationTimestampInSec) {
             LogError(uint8(Errors.ORDER_EXPIRED), order.orderHash);
             return 0;
@@ -213,6 +220,7 @@ contract Exchange is SafeMath {
         return filledTakerTokenAmount;
     }
 
+// 取消填入的订单，并返回取消的Token数量
     /// @dev Cancels the input order.
     /// @param orderAddresses Array of order's maker, taker, makerToken, takerToken, and feeRecipient.
     /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
@@ -256,7 +264,7 @@ contract Exchange is SafeMath {
 
         cancelled[order.orderHash] = safeAdd(cancelled[order.orderHash], cancelledTakerTokenAmount);
 
-        LogCancel(
+        emit LogCancel(
             order.maker,
             order.feeRecipient,
             order.makerToken,
@@ -273,6 +281,8 @@ contract Exchange is SafeMath {
     * Wrapper functions
     */
 
+    // 用指定参数和ECDSA签名填写订单， 如果数量不足则抛出
+    // TODO:ECDSA签名？
     /// @dev Fills an order with specified parameters and ECDSA signature, throws if specified amount not filled entirely.
     /// @param orderAddresses Array of order's maker, taker, makerToken, takerToken, and feeRecipient.
     /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
@@ -300,6 +310,11 @@ contract Exchange is SafeMath {
         ) == fillTakerTokenAmount);
     }
 
+/**
+    下面是批量操作
+ */
+
+    //单个交易中同步执行多个订单
     /// @dev Synchronously executes multiple fill orders in a single transaction.
     /// @param orderAddresses Array of address arrays containing individual order addresses.
     /// @param orderValues Array of uint arrays containing individual order values.
@@ -396,6 +411,7 @@ contract Exchange is SafeMath {
         return filledTakerTokenAmount;
     }
 
+// 单个shiwu中同步取消多个订单
     /// @dev Synchronously cancels multiple orders in a single transaction.
     /// @param orderAddresses Array of address arrays containing individual order addresses.
     /// @param orderValues Array of uint arrays containing individual order values.
@@ -418,7 +434,9 @@ contract Exchange is SafeMath {
     /*
     * Constant public functions
     */
-
+/**
+    公共方法
+ */
     /// @dev Calculates Keccak-256 hash of order with specified parameters.
     /// @param orderAddresses Array of order's maker, taker, makerToken, takerToken, and feeRecipient.
     /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
@@ -444,6 +462,7 @@ contract Exchange is SafeMath {
         );
     }
 
+// 验证订单签名有效
     /// @dev Verifies that an order signature is valid.
     /// @param signer address of signer.
     /// @param hash Signed Keccak-256 hash.
@@ -518,6 +537,9 @@ contract Exchange is SafeMath {
     * Internal functions
     */
 
+    /**
+        使用TokenTransferProxy交易Token
+     */
     /// @dev Transfers a token using TokenTransferProxy transferFrom function.
     /// @param token Address of token to transferFrom.
     /// @param from Address transfering token.
@@ -535,6 +557,7 @@ contract Exchange is SafeMath {
         return TokenTransferProxy(TOKEN_TRANSFER_PROXY_CONTRACT).transferFrom(token, from, to, value);
     }
 
+    //检查是否有订单交易失败
     /// @dev Checks if any order transfers will fail.
     /// @param order Order struct of params that will be checked.
     /// @param fillTakerTokenAmount Desired amount of takerToken to fill.
