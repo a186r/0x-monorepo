@@ -89,6 +89,7 @@ contract TokenRegistry is Ownable {
     }
 
 
+// 允许owner添加一个新的Token到注册表
     /// @dev Allows owner to add a new token to the registry.
     /// @param _token Address of new token.
     /// @param _name Name of new token.
@@ -131,6 +132,7 @@ contract TokenRegistry is Ownable {
         );
     }
 
+// 允许owner移除一个存在的Token
     /// @dev Allows owner to remove an existing token from the registry.
     /// @param _token Address of existing token.
     function removeToken(address _token, uint _index)
