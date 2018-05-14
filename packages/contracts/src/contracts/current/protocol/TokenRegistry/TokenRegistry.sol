@@ -20,6 +20,7 @@ pragma solidity ^0.4.11;
 
 import { Ownable_v1 as Ownable } from "../../../previous/Ownable/Ownable_v1.sol";
 
+// 存储与ERC20相关的元数据
 /// @title Token Registry - Stores metadata associated with ERC20 tokens. See ERC22 https://github.com/ethereum/EIPs/issues/22
 /// @author Amir Bandeali - <amir@0xProject.com>, Will Warren - <will@0xProject.com>
 contract TokenRegistry is Ownable {
